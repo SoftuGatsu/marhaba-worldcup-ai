@@ -6,6 +6,8 @@ import { FlightCard } from './messages/FlightCard';
 import { ImageGallery } from './messages/ImageGallery';
 import { RecipeCard } from './messages/RecipeCard';
 import { LinkCard } from './messages/LinkCard';
+import { FoodRecommendationsCard } from './messages/FoodRecommendationsCard';
+import { AccommodationRecommendationsCard } from './messages/AccommodationRecommendationsCard';
 
 interface ChatMessageProps {
   message: Message;
@@ -26,6 +28,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         return <RecipeCard payload={message.payload} />;
       case 'link_card':
         return <LinkCard payload={message.payload} />;
+      case 'food_recommendations':
+        return <FoodRecommendationsCard payload={message.payload} />;
+      case 'accommodation_recommendations':
+        return <AccommodationRecommendationsCard payload={message.payload} />;
       default:
         return (
           <div className="chat-bubble-ai">

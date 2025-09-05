@@ -1,4 +1,5 @@
 import { ApiRequest, ApiResponse } from '@/types/api';
+import { agentService } from './agentService';
 
 class MarhabaApiService {
   private baseUrl = '/api/marhaba'; // This will be proxied to the actual backend
@@ -29,12 +30,11 @@ class MarhabaApiService {
     }
   }
 
-  // Mock API for development/demo purposes
+  // Enhanced API with agent integration for development/demo purposes
   async sendMessageMock(query: string, sessionId: string): Promise<ApiResponse> {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1500));
 
-    // Mock responses based on query content
     const mockResponse: ApiResponse = {
       messages: [
         {
@@ -45,6 +45,102 @@ class MarhabaApiService {
         }
       ]
     };
+
+    // Check if the query is asking for food recommendations
+    if (agentService.detectFoodQuery(query)) {
+      try {
+        const foodRecommendations = await agentService.getFoodRecommendations(query);
+        if (foodRecommendations) {
+          mockResponse.messages.push({
+            type: 'food_recommendations',
+            payload: foodRecommendations
+          });
+        }
+      } catch (error) {
+        console.error('Failed to get food recommendations:', error);
+        // Fallback to mock food recommendations
+        mockResponse.messages.push({
+          type: 'food_recommendations',
+          payload: {
+            recommendations: [
+              {
+                name: 'Tagine Djaj',
+                description: 'Traditional Moroccan chicken stew slow-cooked with preserved lemons and olives',
+                flavor_profile: 'Rich, aromatic, and mildly spicy with citrus notes',
+                key_ingredients: ['Chicken', 'Preserved lemons', 'Olives', 'Ginger', 'Saffron'],
+                cultural_significance: 'A cornerstone of Moroccan cuisine, traditionally served during special occasions',
+                recipe_link: 'https://www.allrecipes.com/recipe/moroccan-chicken-tagine',
+                why_matches: 'Perfect balance of savory and citrus flavors matching your taste preferences'
+              },
+              {
+                name: 'Pastilla',
+                description: 'Sweet and savory pastry with pigeon or chicken, almonds, and cinnamon',
+                flavor_profile: 'Unique blend of sweet cinnamon and savory meat',
+                key_ingredients: ['Phyllo pastry', 'Chicken', 'Almonds', 'Cinnamon', 'Sugar'],
+                cultural_significance: 'Traditional festive dish often served at weddings and celebrations',
+                recipe_link: 'https://www.foodnetwork.com/recipes/moroccan-pastilla',
+                why_matches: 'Offers an adventurous mix of sweet and savory flavors'
+              }
+            ],
+            taste_preferences: 'savory with citrus notes',
+            cuisine_type: 'Moroccan',
+            dietary_restrictions: undefined
+          }
+        });
+      }
+    }
+
+    // Check if the query is asking for accommodation recommendations
+    if (agentService.detectAccommodationQuery(query)) {
+      try {
+        const accommodationRecommendations = await agentService.getAccommodationRecommendations(query);
+        if (accommodationRecommendations) {
+          mockResponse.messages.push({
+            type: 'accommodation_recommendations',
+            payload: accommodationRecommendations
+          });
+        }
+      } catch (error) {
+        console.error('Failed to get accommodation recommendations:', error);
+        // Fallback to mock accommodation recommendations
+        mockResponse.messages.push({
+          type: 'accommodation_recommendations',
+          payload: {
+            recommendations: [
+              {
+                name: 'Riad Yasmine',
+                type: 'Traditional Riad',
+                description: 'Beautifully restored traditional riad in the heart of Marrakech medina',
+                key_features: ['Rooftop terrace', 'Traditional architecture', 'Central courtyard', 'Free WiFi'],
+                price_per_night: '€120',
+                total_cost: '€480 (4 nights)',
+                booking_link: 'https://www.booking.com/riad-yasmine',
+                special_offers: 'Free breakfast included for World Cup visitors',
+                why_good_value: 'Authentic Moroccan experience in prime location with excellent amenities',
+                location_score: '4.8/5'
+              },
+              {
+                name: 'Hotel Atlas Medina',
+                type: 'Boutique Hotel',
+                description: 'Modern comfort meets traditional Moroccan style',
+                key_features: ['Pool', 'Spa', 'Restaurant', 'Air conditioning'],
+                price_per_night: '€95',
+                total_cost: '€380 (4 nights)',
+                booking_link: 'https://www.expedia.com/hotel-atlas-medina',
+                special_offers: null,
+                why_good_value: 'Great amenities at competitive price with easy access to stadium',
+                location_score: '4.6/5'
+              }
+            ],
+            destination: 'Marrakech',
+            budget_per_night: '€150',
+            accommodation_type: 'hotel',
+            check_in: '2030-06-15',
+            check_out: '2030-06-19'
+          }
+        });
+      }
+    }
 
     if (query.toLowerCase().includes('itinerary') || query.toLowerCase().includes('plan')) {
       mockResponse.messages.push({
