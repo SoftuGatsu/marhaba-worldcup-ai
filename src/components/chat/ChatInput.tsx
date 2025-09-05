@@ -30,7 +30,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t border-border/50 p-4">
+    <div className="border-t border-border/50 bg-background/80 backdrop-blur-lg p-4">
       <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
         <div className="flex items-end space-x-3">
           <div className="flex-1 relative">

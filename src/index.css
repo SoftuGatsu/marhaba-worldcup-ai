@@ -250,6 +250,29 @@
   .animate-scale-in {
     animation: scale-in 0.3s var(--ease-spring);
   }
+
+  /* Text utilities */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Prose styles for AI messages */
+  .prose {
+    max-width: none;
+  }
+
+  .prose strong {
+    font-weight: 600;
+    color: hsl(var(--foreground));
+  }
+
+  .prose em {
+    font-style: italic;
+    color: hsl(var(--muted-foreground));
+  }
 }
 
 @keyframes slide-in-right {
