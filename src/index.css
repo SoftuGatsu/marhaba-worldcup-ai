@@ -2,41 +2,74 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Marhaba AI Design System - Moroccan Modernism */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Moroccan Modernism Color Palette */
+    --background: 39 20% 96%; /* Sandy beige background */
+    --foreground: 0 0% 20%; /* Dark charcoal text */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%; /* Pure white cards */
+    --card-foreground: 0 0% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 0 0% 20%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Majorelle Blue - Primary brand color */
+    --primary: 215 100% 34%; /* #004AAD */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 215 100% 45%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Sandy beige - Secondary */
+    --secondary: 39 20% 96%; /* #F5EFE6 */
+    --secondary-foreground: 0 0% 20%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Terracotta - Accent */
+    --accent: 25 100% 45%; /* #E87500 */
+    --accent-foreground: 0 0% 100%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Minty green - Success/nature */
+    --nature: 153 30% 55%; /* #66B093 */
+    --nature-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Gold - Premium accents */
+    --gold: 51 100% 50%; /* #FFD700 */
+    --gold-foreground: 0 0% 20%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --muted: 39 15% 92%;
+    --muted-foreground: 0 0% 45%;
 
-    --radius: 0.5rem;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 39 15% 88%;
+    --input: 39 15% 92%;
+    --ring: 215 100% 34%;
+
+    --radius: 12px;
+
+    /* Custom gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-moroccan: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--gold)));
+    --gradient-card: linear-gradient(145deg, hsl(var(--card)) 0%, hsl(39 10% 98%) 100%);
+    --gradient-glass: linear-gradient(145deg, hsl(0 0% 100% / 0.25), hsl(0 0% 100% / 0.05));
+
+    /* Custom shadows */
+    --shadow-glass: 0 8px 32px hsl(var(--primary) / 0.1);
+    --shadow-card: 0 4px 20px hsl(0 0% 0% / 0.08);
+    --shadow-button: 0 2px 8px hsl(var(--accent) / 0.2);
+
+    /* Animation curves */
+    --ease-spring: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Chat specific */
+    --chat-user-bg: hsl(var(--accent));
+    --chat-ai-bg: hsl(var(--card));
+    --chat-input-bg: hsl(0 0% 100% / 0.9);
 
     --sidebar-background: 0 0% 98%;
 
@@ -100,6 +133,163 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-body;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  /* Glassmorphism Components */
+  .glass-card {
+    @apply backdrop-blur-md bg-gradient-to-br from-white/20 to-white/5 border border-white/20;
+    box-shadow: var(--shadow-glass);
+  }
+
+  .glass-button {
+    @apply backdrop-blur-md bg-gradient-to-r from-white/30 to-white/10 border border-white/20;
+    transition: all 0.3s var(--ease-smooth);
+  }
+
+  .glass-button:hover {
+    @apply from-white/40 to-white/20 scale-105;
+    box-shadow: var(--shadow-button);
+  }
+
+  /* Chat Components */
+  .chat-bubble-user {
+    background: var(--chat-user-bg);
+    @apply text-white rounded-3xl px-4 py-3 max-w-[80%] ml-auto animate-slide-in-right;
+  }
+
+  .chat-bubble-ai {
+    background: var(--chat-ai-bg);
+    @apply text-foreground rounded-3xl px-4 py-3 max-w-[85%] mr-auto animate-fade-in;
+    box-shadow: var(--shadow-card);
+  }
+
+  .chat-card {
+    @apply rounded-2xl p-6 mb-4 max-w-[90%] mr-auto animate-fade-in;
+    background: var(--gradient-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid hsl(var(--border));
+  }
+
+  /* Premium Button Variants */
+  .btn-moroccan {
+    background: var(--gradient-moroccan);
+    @apply text-white px-6 py-3 rounded-full font-medium;
+    box-shadow: var(--shadow-button);
+    transition: all 0.3s var(--ease-spring);
+  }
+
+  .btn-moroccan:hover {
+    @apply scale-105 -translate-y-0.5;
+  }
+
+  .btn-glass {
+    @apply glass-button text-primary font-medium px-6 py-3 rounded-full;
+  }
+
+  /* Loading Animation */
+  .typing-indicator {
+    @apply flex space-x-1 p-4;
+  }
+
+  .typing-dot {
+    @apply w-2 h-2 bg-muted-foreground rounded-full animate-bounce;
+    animation-delay: calc(var(--delay) * 0.1s);
+  }
+
+  /* Moroccan Pattern Background */
+  .moroccan-pattern {
+    background-image: radial-gradient(circle at 2px 2px, hsl(var(--primary) / 0.1) 1px, transparent 0);
+    background-size: 20px 20px;
+  }
+
+  /* Custom Scrollbar */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 3px;
+  }
+}
+
+@layer utilities {
+  .font-heading {
+    font-family: 'Poppins', system-ui, sans-serif;
+  }
+
+  .font-body {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  .animate-slide-in-right {
+    animation: slide-in-right 0.3s var(--ease-smooth);
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.5s var(--ease-smooth);
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.3s var(--ease-spring);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bounce-gentle {
+  0%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-4px);
   }
 }
