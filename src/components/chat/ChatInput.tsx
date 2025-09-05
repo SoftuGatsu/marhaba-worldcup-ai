@@ -10,7 +10,7 @@ interface ChatInputProps {
 export const ChatInput: React.FC<ChatInputProps> = ({ 
   onSendMessage, 
   disabled = false, 
-  placeholder = "Plan my trip to Casablanca for the semi-finals..." 
+  placeholder = "Ask about Morocco World Cup 2030 travel plans..." 
 }) => {
   const [message, setMessage] = useState('');
 

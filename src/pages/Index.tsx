@@ -1,7 +1,7 @@
-import { ChatContainer } from '@/components/chat/ChatContainer';
+import { TravelPlanContainer } from '@/components/chat/TravelPlanContainer';
 
 const Index = () => {
-  return <ChatContainer />;
+  return <TravelPlanContainer />;
 };
 
 export default Index;

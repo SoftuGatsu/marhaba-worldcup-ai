@@ -20,10 +20,12 @@ interface WelcomeMessageProps {
 
 export const WelcomeMessage: React.FC<WelcomeMessageProps> = ({ onSuggestionClick }) => {
   const suggestions = [
-    "Plan my 3-day itinerary in Marrakech",
-    "Find flights to Morocco for July",
-    "What's a traditional Moroccan dish?",
-    "Show me the best riads in Casablanca"
+    "Plan my World Cup trip to Casablanca",
+    "Best time to visit Morocco for the World Cup",
+    "Traditional Moroccan food I must try",
+    "How to get from Marrakesh to other host cities",
+    "Budget for 10 days in Morocco during World Cup",
+    "Cultural etiquette tips for Morocco"
   ];
 
   return (
@@ -34,11 +36,11 @@ export const WelcomeMessage: React.FC<WelcomeMessageProps> = ({ onSuggestionClic
             <span className="text-2xl text-white font-bold">M</span>
           </div>
           <h1 className="font-heading text-2xl font-bold text-foreground mb-2">
-            Marhaba! Welcome to your 2030 World Cup Co-pilot
+            Marhaba! Welcome to Morocco 2030 World Cup Planner
           </h1>
           <p className="text-muted-foreground leading-relaxed">
-            I'm your AI-powered travel concierge for Morocco's World Cup experience. 
-            I can help you plan your trip, find flights, discover local cuisine, and make your journey unforgettable.
+            I'm your AI-powered travel concierge for Morocco's FIFA World Cup 2030 experience. 
+            I can help you plan your trip, find flights, discover host cities, and make your football journey unforgettable.
           </p>
         </div>
 
