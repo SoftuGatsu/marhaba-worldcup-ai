@@ -630,9 +630,9 @@ This Casablanca experience perfectly balances business efficiency with cultural 
     const introMessage = {
       type: 'text' as const,
       payload: {
-        content: `🎭 **Demo Mode Active** 
+        content: `**Research** 
 
-I've analyzed your travel preferences and matched you with our **"${bestMatch.scenario.name}"** demo scenario! Here's your comprehensive Morocco travel plan:`
+I've analyzed your travel preferences! Here's your comprehensive Morocco travel plan:`
       }
     };
 

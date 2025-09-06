@@ -52,7 +52,7 @@ class MarhabaApiService {
     if (demoService.isDemoMode()) {
       console.log('Demo mode enabled, generating demo response...');
       // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 7000));
       return demoService.generateDemoResponse(formData || {});
     }
 
