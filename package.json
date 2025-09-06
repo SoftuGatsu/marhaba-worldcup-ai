@@ -8,7 +8,13 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:agents": "node test-agents.js",
+    "demo": "node demo-config.cjs",
+    "demo:enable": "node demo-config.cjs enable",
+    "demo:disable": "node demo-config.cjs disable",
+    "demo:status": "node demo-config.cjs status",
+    "demo:scenarios": "node demo-config.cjs scenarios"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

@@ -14,6 +14,7 @@ interface ChatState {
   isLoading: boolean;
   hasError: boolean;
   sessionId: string;
+  loadingStartTime: number | null;
 }
 
 export const ChatContainer: React.FC = () => {
@@ -31,7 +32,8 @@ export const ChatContainer: React.FC = () => {
   const [chatState, setChatState] = useState<ChatState>({
     isLoading: false,
     hasError: false,
-    sessionId: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    sessionId: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    loadingStartTime: null
   });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -63,12 +65,13 @@ export const ChatContainer: React.FC = () => {
     setChatState(prev => ({
       ...prev,
       isLoading: true,
-      hasError: false
+      hasError: false,
+      loadingStartTime: Date.now()
     }));
 
     try {
       // Use mock API for demo - replace with real API call
-      const response = await marhabaApi.sendMessageMock(message, chatState.sessionId);
+      const response = await marhabaApi.sendMessageSmart(message, chatState.sessionId);
       
       const aiMessage = {
         id: `ai_${Date.now()}`,
@@ -82,14 +85,16 @@ export const ChatContainer: React.FC = () => {
 
       setChatState(prev => ({
         ...prev,
-        isLoading: false
+        isLoading: false,
+        loadingStartTime: null
       }));
     } catch (error) {
       console.error('Failed to send message:', error);
       setChatState(prev => ({
         ...prev,
         isLoading: false,
-        hasError: true
+        hasError: true,
+        loadingStartTime: null
       }));
     }
   };
@@ -107,7 +112,8 @@ export const ChatContainer: React.FC = () => {
     setChatState(prev => ({
       ...prev,
       hasError: false,
-      sessionId: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      sessionId: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      loadingStartTime: null
     }));
   };
 
@@ -158,7 +164,7 @@ export const ChatContainer: React.FC = () => {
               }
             })}
 
-            {chatState.isLoading && <TypingIndicator />}
+            {chatState.isLoading && <TypingIndicator loadingStartTime={chatState.loadingStartTime} />}
             {chatState.hasError && <ErrorMessage onRetry={retryLastMessage} />}
             
             <div ref={messagesEndRef} />

@@ -35,6 +35,29 @@ Finds the best accommodation options based on:
 - **Real-time Integration**: Connects with external agent services
 - **Conversation Management**: Multi-conversation support with history
 - **Responsive Design**: Works on all device sizes
+- **Agent-Only Mode**: Configurable to use only agent responses (no hardcoded fallbacks)
+
+## ⚙️ Configuration
+
+### Agent-Only Mode
+
+The application can be configured to use only agent-generated responses, removing all hardcoded fallbacks:
+
+1. Copy the environment file:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Set the agent-only mode:
+   ```env
+   VITE_AGENT_ONLY_MODE=true
+   ```
+
+**Behavior:**
+- `true`: Only uses agent services for responses. If agents are unavailable, returns error messages.
+- `false` or unset: Falls back to real backend API when agents are unavailable.
+
+This ensures that all responses come from your actual AI agents rather than hardcoded mock data.
 
 ## Project info
 
@@ -120,6 +143,53 @@ The agents are configured to work with the external `food-recommender` and `trav
 - Configuring real agent integration
 - Parsing agent responses
 - Error handling and fallbacks
+
+### Timeout Configuration
+
+The application includes robust timeout handling to prevent requests from hanging indefinitely:
+
+- **Connection Test**: 5 seconds
+- **Agent Requests**: 30 seconds total
+- **Response Reading**: 25 seconds maximum
+- **Visual Feedback**: Shows elapsed time after 5 seconds
+
+### Testing Agent Connectivity
+
+You can test your agent services directly using curl:
+
+```bash
+# Test food recommender agent
+curl -X POST "http://localhost:8080/agent/food-recommender" \
+  -H "Content-Type: application/json" \
+  -d '{"input": "hello"}'
+
+# Test travel booking agent
+curl -X POST "http://localhost:8080/agent/travel-booking" \
+  -H "Content-Type: application/json" \
+  -d '{"input": "find hotels in Morocco"}'
+
+# Test other available agents
+curl -X POST "http://localhost:8080/agent/flight-agent" \
+  -H "Content-Type: application/json" \
+  -d '{"input": "flights to Morocco"}'
+```
+
+### Troubleshooting Common Issues
+
+**"Request timed out" errors:**
+- Check if agent services are running on localhost:8080
+- Verify agent services are responding within 30 seconds
+- Monitor system resources (CPU, memory) on the agent host
+
+**"Agent service not found" errors:**
+- Ensure the correct agent names are configured
+- Verify the proxy configuration in `vite.config.ts`
+- Check agent service logs for startup errors
+
+**Connection refused errors:**
+- Confirm agent services are running on the correct port
+- Verify firewall settings aren't blocking localhost:8080
+- Test connectivity with the curl commands above
 
 ## 📁 Project Structure
 

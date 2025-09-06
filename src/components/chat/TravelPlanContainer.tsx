@@ -51,7 +51,7 @@ export const TravelPlanContainer: React.FC = () => {
     scrollToBottom();
   }, [currentConversation?.messages, chatState.isLoading]);
 
-  const sendMessage = async (message: string) => {
+  const sendMessage = async (message: string, formData?: any) => {
     // Create new conversation if none exists
     if (!currentConversationId) {
       createNewConversation();
@@ -75,7 +75,7 @@ export const TravelPlanContainer: React.FC = () => {
 
     try {
       // Use mock API for demo - replace with real API call
-      const response = await marhabaApi.sendMessageMock(message, chatState.sessionId);
+      const response = await marhabaApi.sendMessageSmart(message, chatState.sessionId, formData);
       
       const aiMessage = {
         id: `ai_${Date.now()}`,
@@ -101,13 +101,94 @@ export const TravelPlanContainer: React.FC = () => {
     }
   };
 
+  const [pendingApiCall, setPendingApiCall] = useState<{message: string, sessionId: string, formData?: any} | null>(null);
+
+  // Effect to handle API call after state updates
+  React.useEffect(() => {
+    if (pendingApiCall && viewMode === 'chat') {
+      const handleApiCall = async () => {
+        setChatState(prev => ({
+          ...prev,
+          isLoading: true,
+          hasError: false
+        }));
+
+        try {
+          // Call the API
+          const response = await marhabaApi.sendMessageSmart(pendingApiCall.message, pendingApiCall.sessionId, pendingApiCall.formData);
+          
+          const aiMessage = {
+            id: `ai_${Date.now()}`,
+            type: 'ai' as const,
+            content: response.messages,
+            timestamp: new Date()
+          };
+
+          const currentMessages = currentConversation?.messages || [];
+          const finalMessages = [...currentMessages, aiMessage];
+          updateCurrentConversation(finalMessages);
+
+          setChatState(prev => ({
+            ...prev,
+            isLoading: false
+          }));
+        } catch (error) {
+          console.error('Failed to send message:', error);
+          setChatState(prev => ({
+            ...prev,
+            isLoading: false,
+            hasError: true
+          }));
+        } finally {
+          setPendingApiCall(null);
+        }
+      };
+
+      // Small delay to ensure UI has rendered
+      const timeoutId = setTimeout(handleApiCall, 100);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [pendingApiCall, viewMode, currentConversation?.messages]);
+
   const handleFormSubmit = async (formData: any) => {
-    setFormSubmitted(true);
-    setViewMode('chat');
+    console.log('handleFormSubmit called with:', formData);
     
     // Send the generated prompt from the form
-    if (formData.generatedPrompt) {
-      await sendMessage(formData.generatedPrompt);
+    if (formData.message) {
+      console.log('Sending message:', formData.message);
+      
+      let conversationId = currentConversationId;
+      let existingMessages = currentConversation?.messages || [];
+      
+      // Create new conversation if none exists
+      if (!conversationId) {
+        conversationId = createNewConversation();
+        existingMessages = []; // New conversation has no existing messages
+      }
+
+      // Add the user message first
+      const userMessage = {
+        id: `user_${Date.now()}`,
+        type: 'user' as const,
+        content: formData.message,
+        timestamp: new Date()
+      };
+
+      const newMessages = [...existingMessages, userMessage];
+      updateCurrentConversation(newMessages);
+      
+      // Switch to chat view after adding the message
+      setFormSubmitted(true);
+      setViewMode('chat');
+      
+      // Set up pending API call
+      setPendingApiCall({
+        message: formData.message,
+        sessionId: chatState.sessionId,
+        formData: formData.formData
+      });
+    } else {
+      console.error('No message found in formData:', formData);
     }
   };
 
@@ -143,6 +224,20 @@ export const TravelPlanContainer: React.FC = () => {
   const showWelcome = viewMode === 'welcome' && !formSubmitted;
   const showForm = viewMode === 'form' && !formSubmitted;
   const showChat = viewMode === 'chat' || formSubmitted;
+
+  // Debug logging
+  React.useEffect(() => {
+    console.log('TravelPlanContainer state update:', {
+      viewMode,
+      formSubmitted,
+      currentConversationId,
+      currentConversation,
+      messageCount: currentMessages.length,
+      showChat,
+      showForm,
+      showWelcome
+    });
+  }, [viewMode, formSubmitted, currentConversationId, currentConversation, currentMessages.length, showChat, showForm, showWelcome]);
 
   return (
     <div className="flex h-screen bg-background">
@@ -208,6 +303,7 @@ export const TravelPlanContainer: React.FC = () => {
             <div className="p-6">
               <TravelPlanForm
                 onSubmit={handleFormSubmit}
+                onBack={() => setViewMode('welcome')}
                 disabled={chatState.isLoading}
               />
             </div>
@@ -216,7 +312,13 @@ export const TravelPlanContainer: React.FC = () => {
           {showChat && (
             <div className="flex-1 pb-6 pt-6 md:pt-6">
               <div className="max-w-4xl mx-auto px-4">
+                {currentMessages.length === 0 && (
+                  <div className="text-center text-muted-foreground p-4">
+                    No messages yet. Check console for debugging info.
+                  </div>
+                )}
                 {currentMessages.map((message) => {
+                  console.log('Rendering message:', message);
                   if (message.type === 'user') {
                     return (
                       <UserMessage

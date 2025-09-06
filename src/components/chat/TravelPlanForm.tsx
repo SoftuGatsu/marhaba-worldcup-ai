@@ -1,492 +1,638 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Separator } from '@/components/ui/separator';
-import { CalendarIcon, MapPin, Plane, Clock, DollarSign, Users, Heart, Mountain, Backpack } from 'lucide-react';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
-
-interface TravelFormData {
-  source: string;
-  destination: string;
-  numDays: number[];
-  travelTheme: string;
-  activityPreferences: string;
-  departureDate: Date | undefined;
-  returnDate: Date | undefined;
-  budget: string;
-  flightClass: string;
-  visaRequired: boolean;
-  travelInsurance: boolean;
-  currencyConverter: boolean;
-  packingItems: Record<string, boolean>;
-  matchInterest: string;
-  numberOfTravelers: number;
-  maxPricePerNight: number;
-  accommodationType: string;
-  foodPreferences: string;
-}
+import { Calendar, CalendarIcon, Plane, Hotel, Utensils, MapPin, CloudSun, Search, CreditCard, UtensilsCrossed } from 'lucide-react';
 
 interface TravelPlanFormProps {
-  onSubmit: (formData: TravelFormData) => void;
+  onSubmit: (formData: any) => void;
+  onBack?: () => void;
   disabled?: boolean;
 }
 
-const travelThemes = [
-  { value: 'football-fan', label: '⚽ Football Fan Experience', icon: Heart },
-  { value: 'family-worldcup', label: '👨‍👩‍👧‍👦 Family World Cup Trip', icon: Users },
-  { value: 'cultural-football', label: '🕌 Culture & Football Mix', icon: Mountain },
-  { value: 'luxury-worldcup', label: '� Luxury World Cup Experience', icon: Backpack },
-];
-
-const moroccanCities = [
-  { code: "AGD", name: "Agadir", stadium: "Adrar Stadium" },
-  { code: "CMN", name: "Casablanca", stadium: "Hassan II Stadium" },
-  { code: "FEZ", name: "Fez", stadium: "Fez Stadium" },
-  { code: "RAK", name: "Marrakesh", stadium: "Marrakesh Stadium" },
-  { code: "RBA", name: "Rabat", stadium: "Prince Moulay Abdellah Stadium" },
-  { code: "TNG", name: "Tangier", stadium: "Ibn Batouta Stadium" }
-];
-
-const packingItems = {
-  '⚽ Football Jerseys & Scarves': true,
-  '👕 Comfortable Clothes': true,
-  '🩴 Walking Shoes': true,
-  '🕶️ Sunglasses & Sunscreen': true,
-  '� Phone Charger & Power Bank': true,
-  '🎫 Match Tickets & Documents': true,
-  '💊 Medications & First-Aid': false,
-};
-
-export const TravelPlanForm: React.FC<TravelPlanFormProps> = ({ onSubmit, disabled = false }) => {
-  const [formData, setFormData] = useState<TravelFormData>({
-    source: 'CDG', // Example: Paris Charles de Gaulle for international visitors
-    destination: 'CMN', // Casablanca as default
-    numDays: [7],
-    travelTheme: 'football-fan',
-    activityPreferences: 'Watching World Cup matches, exploring Moroccan culture, trying local cuisine',
-    departureDate: undefined,
-    returnDate: undefined,
-    budget: 'Standard',
-    flightClass: 'Economy',
-    visaRequired: false,
-    travelInsurance: true,
-    currencyConverter: true,
-    packingItems: { ...packingItems },
-    matchInterest: 'any-matches',
-    numberOfTravelers: 2,
-    maxPricePerNight: 100,
-    accommodationType: 'hotel',
-    foodPreferences: '',
+export const TravelPlanForm: React.FC<TravelPlanFormProps> = ({ onSubmit, onBack, disabled }) => {
+  const [formData, setFormData] = useState({
+    // Flight Agent
+    departure_city: '',
+    departure_date: '',
+    return_date: '',
+    passengers: '1',
+    class_preference: '',
+    airline_preference: '',
+    flexible_dates: false,
+    
+    // Hotel Agent
+    check_in_date: '',
+    check_out_date: '',
+    guests: '1',
+    room_type: '',
+    hotel_preference: '',
+    amenities: [] as string[],
+    budget_range: '',
+    
+    // Food Recommender Agent
+    dietary_restrictions: [] as string[],
+    cuisine_preferences: [] as string[],
+    meal_types: [] as string[],
+    food_budget: '',
+    spice_tolerance: '',
+    
+    // Restaurant Agent
+    restaurant_type: '',
+    dining_occasion: '',
+    group_size: '2',
+    location_preference: '',
+    restaurant_budget: '',
+    
+    // Activities Agent
+    activity_types: [] as string[],
+    age_group: '',
+    physical_level: '',
+    duration_preference: '',
+    indoor_outdoor: '',
+    cultural_interests: [] as string[],
+    
+    // Weather Agent
+    weather_concerns: [] as string[],
+    seasonal_preferences: '',
+    activities_weather_dependent: false,
+    
+    // Research Agent
+    research_topics: [] as string[],
+    information_depth: '',
+    specific_questions: '',
+    
+    // Travel Booking Agent
+    package_type: '',
+    booking_timeline: '',
+    special_requirements: '',
+    contact_preferences: [] as string[],
+    
+    // General
+    destination: '',
+    travel_dates: '',
+    budget: '',
+    special_notes: ''
   });
+
+  const handleInputChange = (field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleArrayChange = (field: string, value: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: checked 
+        ? [...(prev[field as keyof typeof prev] as string[]), value]
+        : (prev[field as keyof typeof prev] as string[]).filter(item => item !== value)
+    }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
-  };
-
-  const generatePrompt = () => {
-    const theme = travelThemes.find(t => t.value === formData.travelTheme)?.label || formData.travelTheme;
-    const selectedCity = moroccanCities.find(c => c.code === formData.destination);
     
-    return `Plan my ${formData.numDays[0]}-day Morocco 2030 World Cup trip as a ${theme.toLowerCase()} from ${formData.source} to ${selectedCity?.name || formData.destination}.
-
-🇲🇦 MOROCCO WORLD CUP 2030 DETAILS:
-- Primary destination: ${selectedCity?.name} (${selectedCity?.stadium})
-- Travel dates: ${formData.departureDate ? format(formData.departureDate, 'MMM dd, yyyy') : 'To be determined'} to ${formData.returnDate ? format(formData.returnDate, 'MMM dd, yyyy') : 'To be determined'}
-- Number of travelers: ${formData.numberOfTravelers}
-- Match interest: ${formData.matchInterest}
-- Budget level: ${formData.budget}
-- Max price per night per person: $${formData.maxPricePerNight}
-- Flight class: ${formData.flightClass}
-- Accommodation type: ${formData.accommodationType}
-- Food preferences: ${formData.foodPreferences || 'No specific preferences'}
-
-🏆 WORLD CUP PREFERENCES:
-- Experience type: ${theme}
-- Morocco interests: ${formData.activityPreferences}
-- Travel insurance: ${formData.travelInsurance ? 'Required' : 'Not needed'}
-- Visa requirements: ${formData.visaRequired ? 'Check required' : 'Not needed'}
-
-Please provide a comprehensive Morocco World Cup 2030 travel plan including:
-
-1. ✈️ FLIGHTS TO MOROCCO:
-   - Best flight options from ${formData.source} to Moroccan airports
-   - Connections and pricing for World Cup period
-   - Tips for World Cup travel logistics
-
-2. 🏟️ WORLD CUP MATCH EXPERIENCE:
-   - Stadium information for ${selectedCity?.stadium}
-   - Match availability and ticket guidance
-   - Transportation to/from stadium
-   - Pre/post-match activities in ${selectedCity?.name}
-
-3. 🏨 MOROCCO ACCOMMODATION:
-   - ${formData.accommodationType} options within $${formData.maxPricePerNight} per night per person near ${selectedCity?.name}
-   - World Cup period availability and pricing
-   - Traditional Moroccan accommodation experiences
-
-4. 🗓️ DAILY MOROCCO ITINERARY:
-   - Match day schedules
-   - Moroccan cultural experiences (medinas, souks, architecture)
-   - Food experiences (tagine, couscous, mint tea)
-   - Day trips and excursions
-
-5. 🍽️ MOROCCAN CUISINE & RESTAURANTS:
-   - Traditional Moroccan restaurants
-   - Street food recommendations
-   - Halal dining options
-   - Local specialties in ${selectedCity?.name}
-   - Food preferences consideration: ${formData.foodPreferences || 'General recommendations'}
-
-6. 🚗 MOROCCO TRANSPORTATION:
-   - Getting around ${selectedCity?.name}
-   - Transportation between World Cup cities
-   - Local transport tips and costs
-
-7. 💰 MOROCCO WORLD CUP BUDGET:
-   - Complete cost breakdown in Moroccan Dirhams (MAD)
-   - World Cup period pricing adjustments
-   - Money-saving tips for Morocco
-
-8. 🎯 MOROCCO CULTURAL TIPS:
-   - Local customs and etiquette
-   - Arabic/French phrases for travelers
-   - Shopping in souks and medinas
-   - Tipping and bargaining culture
-   - Prayer times and cultural sensitivity
-
-Focus on creating an authentic Moroccan World Cup experience that combines football excitement with rich cultural immersion!`;
+    // Generate a comprehensive prompt for the agents
+    const prompt = generateAgentPrompt(formData);
+    console.log('Form submitted with prompt:', prompt);
+    console.log('Form data:', formData);
+    onSubmit({ message: prompt, formData });
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const prompt = generatePrompt();
-    onSubmit({ ...formData, generatedPrompt: prompt } as any);
+  const generateAgentPrompt = (data: any) => {
+    let prompt = `I'm planning a trip to ${data.destination || 'Morocco'} and need comprehensive assistance. Here are my requirements:\n\n`;
+    
+    // Flight information - check for any flight-related field
+    const hasFlightInfo = data.departure_city || data.departure_date || data.return_date || 
+                         data.passengers !== '1' || data.class_preference || data.airline_preference || data.flexible_dates;
+    
+    if (hasFlightInfo) {
+      prompt += `🛫 FLIGHT REQUIREMENTS:\n`;
+      if (data.departure_city) prompt += `- Departing from: ${data.departure_city}\n`;
+      if (data.departure_date) prompt += `- Departure date: ${data.departure_date}\n`;
+      if (data.return_date) prompt += `- Return date: ${data.return_date}\n`;
+      if (data.passengers !== '1') prompt += `- Passengers: ${data.passengers}\n`;
+      if (data.class_preference) prompt += `- Class preference: ${data.class_preference}\n`;
+      if (data.airline_preference) prompt += `- Airline preference: ${data.airline_preference}\n`;
+      if (data.flexible_dates) prompt += `- I have flexible dates\n`;
+      prompt += `\n`;
+    }
+    
+    // Hotel information - check for any accommodation-related field
+    const hasAccommodationInfo = data.check_in_date || data.check_out_date || data.guests !== '1' || 
+                               data.room_type || data.hotel_preference || data.amenities.length > 0 || data.budget_range;
+    
+    if (hasAccommodationInfo) {
+      prompt += `🏨 ACCOMMODATION REQUIREMENTS:\n`;
+      if (data.check_in_date) prompt += `- Check-in: ${data.check_in_date}\n`;
+      if (data.check_out_date) prompt += `- Check-out: ${data.check_out_date}\n`;
+      if (data.guests !== '1') prompt += `- Guests: ${data.guests}\n`;
+      if (data.room_type) prompt += `- Room type: ${data.room_type}\n`;
+      if (data.hotel_preference) prompt += `- Hotel preference: ${data.hotel_preference}\n`;
+      if (data.amenities.length > 0) prompt += `- Required amenities: ${data.amenities.join(', ')}\n`;
+      if (data.budget_range) prompt += `- Budget range: ${data.budget_range}\n`;
+      prompt += `\n`;
+    }
+    
+    // Food and dining - check for any food-related field
+    const hasFoodInfo = data.dietary_restrictions.length > 0 || data.cuisine_preferences.length > 0 || 
+                       data.meal_types.length > 0 || data.food_budget || data.spice_tolerance ||
+                       data.restaurant_type || data.dining_occasion || data.group_size !== '2' || 
+                       data.location_preference || data.restaurant_budget;
+    
+    if (hasFoodInfo) {
+      prompt += `🍽️ FOOD & DINING PREFERENCES:\n`;
+      if (data.dietary_restrictions.length > 0) prompt += `- Dietary restrictions: ${data.dietary_restrictions.join(', ')}\n`;
+      if (data.cuisine_preferences.length > 0) prompt += `- Cuisine preferences: ${data.cuisine_preferences.join(', ')}\n`;
+      if (data.meal_types.length > 0) prompt += `- Meal types interested in: ${data.meal_types.join(', ')}\n`;
+      if (data.food_budget) prompt += `- Food budget: ${data.food_budget}\n`;
+      if (data.spice_tolerance) prompt += `- Spice tolerance: ${data.spice_tolerance}\n`;
+      
+      if (data.restaurant_type || data.dining_occasion) {
+        prompt += `- Restaurant preferences:\n`;
+        if (data.restaurant_type) prompt += `  • Type: ${data.restaurant_type}\n`;
+        if (data.dining_occasion) prompt += `  • Occasion: ${data.dining_occasion}\n`;
+        if (data.group_size !== '2') prompt += `  • Group size: ${data.group_size}\n`;
+        if (data.location_preference) prompt += `  • Location: ${data.location_preference}\n`;
+        if (data.restaurant_budget) prompt += `  • Budget: ${data.restaurant_budget}\n`;
+      }
+      prompt += `\n`;
+    }
+    
+    // Activities - check for any activity-related field
+    const hasActivityInfo = data.activity_types.length > 0 || data.cultural_interests.length > 0 || 
+                           data.age_group || data.physical_level || data.duration_preference || data.indoor_outdoor;
+    
+    if (hasActivityInfo) {
+      prompt += `🎯 ACTIVITIES & EXPERIENCES:\n`;
+      if (data.activity_types.length > 0) prompt += `- Activity types: ${data.activity_types.join(', ')}\n`;
+      if (data.age_group) prompt += `- Age group: ${data.age_group}\n`;
+      if (data.physical_level) prompt += `- Physical activity level: ${data.physical_level}\n`;
+      if (data.duration_preference) prompt += `- Activity duration preference: ${data.duration_preference}\n`;
+      if (data.indoor_outdoor) prompt += `- Indoor/Outdoor preference: ${data.indoor_outdoor}\n`;
+      if (data.cultural_interests.length > 0) prompt += `- Cultural interests: ${data.cultural_interests.join(', ')}\n`;
+      prompt += `\n`;
+    }
+    
+    // Weather considerations - check for any weather-related field
+    const hasWeatherInfo = data.weather_concerns.length > 0 || data.seasonal_preferences || data.activities_weather_dependent;
+    
+    if (hasWeatherInfo) {
+      prompt += `🌤️ WEATHER CONSIDERATIONS:\n`;
+      if (data.weather_concerns.length > 0) prompt += `- Weather concerns: ${data.weather_concerns.join(', ')}\n`;
+      if (data.seasonal_preferences) prompt += `- Seasonal preferences: ${data.seasonal_preferences}\n`;
+      if (data.activities_weather_dependent) prompt += `- My activities are weather dependent\n`;
+      prompt += `\n`;
+    }
+    
+    // Research topics - check for any research-related field
+    const hasResearchInfo = data.research_topics.length > 0 || data.specific_questions || data.information_depth;
+    
+    if (hasResearchInfo) {
+      prompt += `📚 RESEARCH & INFORMATION NEEDS:\n`;
+      if (data.research_topics.length > 0) prompt += `- Research topics: ${data.research_topics.join(', ')}\n`;
+      if (data.information_depth) prompt += `- Information depth needed: ${data.information_depth}\n`;
+      if (data.specific_questions) prompt += `- Specific questions: ${data.specific_questions}\n`;
+      prompt += `\n`;
+    }
+    
+    // Booking requirements - check for any booking-related field
+    const hasBookingInfo = data.package_type || data.booking_timeline || data.special_requirements || data.contact_preferences.length > 0;
+    
+    if (hasBookingInfo) {
+      prompt += `📋 BOOKING REQUIREMENTS:\n`;
+      if (data.package_type) prompt += `- Package type: ${data.package_type}\n`;
+      if (data.booking_timeline) prompt += `- Booking timeline: ${data.booking_timeline}\n`;
+      if (data.special_requirements) prompt += `- Special requirements: ${data.special_requirements}\n`;
+      if (data.contact_preferences.length > 0) prompt += `- Contact preferences: ${data.contact_preferences.join(', ')}\n`;
+      prompt += `\n`;
+    }
+    
+    // General information - check for any general field
+    const hasGeneralInfo = data.budget || data.special_notes || data.destination;
+    
+    if (hasGeneralInfo) {
+      prompt += `💰 GENERAL INFORMATION:\n`;
+      if (data.destination) prompt += `- Destination: ${data.destination}\n`;
+      if (data.budget) prompt += `- Overall budget: ${data.budget}\n`;
+      if (data.special_notes) prompt += `- Special notes: ${data.special_notes}\n`;
+    }
+    
+    // Ensure we always have a meaningful prompt
+    if (!hasFlightInfo && !hasAccommodationInfo && !hasFoodInfo && !hasActivityInfo && !hasWeatherInfo && !hasResearchInfo && !hasBookingInfo && !hasGeneralInfo) {
+      prompt += `Please help me plan a comprehensive trip to Morocco. I'm looking for recommendations on flights, accommodation, food, activities, and general travel advice.\n`;
+    }
+    
+    console.log('Generated prompt:', prompt);
+    console.log('Prompt length:', prompt.length);
+    return prompt;
   };
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <div className="text-center space-y-2 mb-8">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-          🇲🇦 Morocco 2030 World Cup Planner
-        </h1>
-        <p className="text-muted-foreground text-lg">
-          Plan your FIFA World Cup 2030 journey to Morocco! Get personalized recommendations for flights, accommodation, and match experiences.
-        </p>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-3xl font-bold">Plan Your Morocco Adventure</h2>
+        <Button variant="outline" onClick={onBack}>
+          Back to Chat
+        </Button>
       </div>
-
-      <form onSubmit={handleFormSubmit} className="space-y-6">
-        {/* Destination Section */}
+      
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* General Trip Information */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MapPin className="w-5 h-5" />
-              �🇦 Your Morocco World Cup Journey
+              General Trip Information
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="source">✈️ Flying from (IATA Code)</Label>
-              <Input
-                id="source"
-                value={formData.source}
-                onChange={(e) => setFormData(prev => ({ ...prev, source: e.target.value }))}
-                placeholder="CDG, LHR, JFK..."
-                className="uppercase"
-              />
-              <p className="text-xs text-muted-foreground">Your departure airport code</p>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="destination">Destination in Morocco</Label>
+                <Input
+                  id="destination"
+                  placeholder="e.g., Marrakech, Casablanca, Fez..."
+                  value={formData.destination}
+                  onChange={(e) => handleInputChange('destination', e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="budget">Overall Budget</Label>
+                <Input
+                  id="budget"
+                  placeholder="e.g., $2000-3000"
+                  value={formData.budget}
+                  onChange={(e) => handleInputChange('budget', e.target.value)}
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="destination">🏟️ Morocco Host City</Label>
-              <Select value={formData.destination} onValueChange={(value) => setFormData(prev => ({ ...prev, destination: value }))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {moroccanCities.map((city) => (
-                    <SelectItem key={city.code} value={city.code}>
-                      {city.name} - {city.stadium}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">Choose your primary destination city</p>
+            <div>
+              <Label htmlFor="special_notes">Special Notes or Requirements</Label>
+              <Textarea
+                id="special_notes"
+                placeholder="Any special requirements, preferences, or notes..."
+                value={formData.special_notes}
+                onChange={(e) => handleInputChange('special_notes', e.target.value)}
+              />
             </div>
           </CardContent>
         </Card>
 
-        {/* Travel Details Section */}
+        {/* Flight Agent */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CalendarIcon className="w-5 h-5" />
-              ⚽ Plan Your World Cup Adventure
+              <Plane className="w-5 h-5" />
+              Flight Information
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-3">
-              <Label>🕒 Trip Duration: {formData.numDays[0]} days</Label>
-              <Slider
-                value={formData.numDays}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, numDays: value }))}
-                max={90}
-                min={3}
-                step={1}
-                className="w-full"
-              />
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>3 days</span>
-                <span>90 days</span>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="departure_city">Departure City</Label>
+                <Input
+                  id="departure_city"
+                  placeholder="e.g., New York, London..."
+                  value={formData.departure_city}
+                  onChange={(e) => handleInputChange('departure_city', e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="departure_date">Departure Date</Label>
+                <Input
+                  id="departure_date"
+                  type="date"
+                  value={formData.departure_date}
+                  onChange={(e) => handleInputChange('departure_date', e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="return_date">Return Date</Label>
+                <Input
+                  id="return_date"
+                  type="date"
+                  value={formData.return_date}
+                  onChange={(e) => handleInputChange('return_date', e.target.value)}
+                />
               </div>
             </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="passengers">Number of Passengers</Label>
+                <Select value={formData.passengers} onValueChange={(value) => handleInputChange('passengers', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select passengers" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1,2,3,4,5,6,7,8,9,10].map(num => (
+                      <SelectItem key={num} value={num.toString()}>{num} passenger{num > 1 ? 's' : ''}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="class_preference">Class Preference</Label>
+                <Select value={formData.class_preference} onValueChange={(value) => handleInputChange('class_preference', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select class" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="economy">Economy</SelectItem>
+                    <SelectItem value="premium-economy">Premium Economy</SelectItem>
+                    <SelectItem value="business">Business</SelectItem>
+                    <SelectItem value="first">First Class</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="airline_preference">Airline Preference</Label>
+                <Input
+                  id="airline_preference"
+                  placeholder="e.g., Royal Air Maroc, Emirates..."
+                  value={formData.airline_preference}
+                  onChange={(e) => handleInputChange('airline_preference', e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="flexible_dates"
+                checked={formData.flexible_dates}
+                onCheckedChange={(checked) => handleInputChange('flexible_dates', checked)}
+              />
+              <Label htmlFor="flexible_dates">I have flexible travel dates (+/- 3 days)</Label>
+            </div>
+          </CardContent>
+        </Card>
 
-            <div className="space-y-3">
-              <Label>⚽ Your World Cup Experience</Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {travelThemes.map((theme) => (
-                  <Button
-                    key={theme.value}
-                    type="button"
-                    variant={formData.travelTheme === theme.value ? "default" : "outline"}
-                    onClick={() => setFormData(prev => ({ ...prev, travelTheme: theme.value }))}
-                    className="justify-start h-auto p-3"
-                  >
-                    <theme.icon className="w-4 h-4 mr-2" />
-                    {theme.label}
-                  </Button>
+        {/* Hotel Agent */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Hotel className="w-5 h-5" />
+              Accommodation Preferences
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="check_in_date">Check-in Date</Label>
+                <Input
+                  id="check_in_date"
+                  type="date"
+                  value={formData.check_in_date}
+                  onChange={(e) => handleInputChange('check_in_date', e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="check_out_date">Check-out Date</Label>
+                <Input
+                  id="check_out_date"
+                  type="date"
+                  value={formData.check_out_date}
+                  onChange={(e) => handleInputChange('check_out_date', e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="guests">Number of Guests</Label>
+                <Select value={formData.guests} onValueChange={(value) => handleInputChange('guests', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select guests" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1,2,3,4,5,6,7,8,9,10].map(num => (
+                      <SelectItem key={num} value={num.toString()}>{num} guest{num > 1 ? 's' : ''}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="room_type">Room Type</Label>
+                <Select value={formData.room_type} onValueChange={(value) => handleInputChange('room_type', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select room type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="single">Single Room</SelectItem>
+                    <SelectItem value="double">Double Room</SelectItem>
+                    <SelectItem value="twin">Twin Room</SelectItem>
+                    <SelectItem value="suite">Suite</SelectItem>
+                    <SelectItem value="family">Family Room</SelectItem>
+                    <SelectItem value="riad">Traditional Riad</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="hotel_preference">Hotel Type Preference</Label>
+                <Select value={formData.hotel_preference} onValueChange={(value) => handleInputChange('hotel_preference', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select hotel type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="luxury">Luxury Hotel</SelectItem>
+                    <SelectItem value="boutique">Boutique Hotel</SelectItem>
+                    <SelectItem value="traditional">Traditional Riad</SelectItem>
+                    <SelectItem value="modern">Modern Hotel</SelectItem>
+                    <SelectItem value="budget">Budget Friendly</SelectItem>
+                    <SelectItem value="resort">Resort</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>Required Amenities</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                {['WiFi', 'Pool', 'Spa', 'Gym', 'Restaurant', 'Room Service', 'Airport Shuttle', 'Parking'].map(amenity => (
+                  <div key={amenity} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`amenity_${amenity}`}
+                      checked={formData.amenities.includes(amenity)}
+                      onCheckedChange={(checked) => handleArrayChange('amenities', amenity, checked as boolean)}
+                    />
+                    <Label htmlFor={`amenity_${amenity}`} className="text-sm">{amenity}</Label>
+                  </div>
                 ))}
               </div>
             </div>
-
-            <div className="space-y-3">
-              <Label>🎫 Match Interest</Label>
-              <Select value={formData.matchInterest} onValueChange={(value) => setFormData(prev => ({ ...prev, matchInterest: value }))}>
+            <div>
+              <Label htmlFor="budget_range">Accommodation Budget Range (per night)</Label>
+              <Select value={formData.budget_range} onValueChange={(value) => handleInputChange('budget_range', value)}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Select budget range" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="any-matches">Any available matches</SelectItem>
-                  <SelectItem value="group-stage">Group stage matches</SelectItem>
-                  <SelectItem value="knockout-stage">Knockout stage matches</SelectItem>
-                  <SelectItem value="semifinals-final">Semifinals & Final</SelectItem>
-                  <SelectItem value="final-only">Final match only</SelectItem>
+                  <SelectItem value="budget">$50-100</SelectItem>
+                  <SelectItem value="mid-range">$100-200</SelectItem>
+                  <SelectItem value="luxury">$200-400</SelectItem>
+                  <SelectItem value="ultra-luxury">$400+</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="space-y-3">
-              <Label htmlFor="numberOfTravelers">👥 Number of Travelers</Label>
-              <Input
-                id="numberOfTravelers"
-                type="number"
-                min="1"
-                max="20"
-                value={formData.numberOfTravelers}
-                onChange={(e) => setFormData(prev => ({ ...prev, numberOfTravelers: parseInt(e.target.value) || 1 }))}
-                className="w-full"
-              />
-              <p className="text-xs text-muted-foreground">How many people will be traveling?</p>
-            </div>
-
-            <div className="space-y-3">
-              <Label htmlFor="maxPricePerNight">💰 Max Price per Night per Person (USD)</Label>
-              <Input
-                id="maxPricePerNight"
-                type="number"
-                min="10"
-                max="2000"
-                step="10"
-                value={formData.maxPricePerNight}
-                onChange={(e) => setFormData(prev => ({ ...prev, maxPricePerNight: parseInt(e.target.value) || 50 }))}
-                className="w-full"
-              />
-              <p className="text-xs text-muted-foreground">Maximum budget per person per night for accommodation</p>
-            </div>
-
-            <div className="space-y-3">
-              <Label>🏨 Accommodation Type</Label>
-              <Select value={formData.accommodationType} onValueChange={(value) => setFormData(prev => ({ ...prev, accommodationType: value }))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="hostel">Hostels</SelectItem>
-                  <SelectItem value="hotel">Hotels</SelectItem>
-                  <SelectItem value="apartment">Apartments</SelectItem>
-                  <SelectItem value="riad">Traditional Riads</SelectItem>
-                  <SelectItem value="any">Any type</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">Preferred type of accommodation</p>
-            </div>
-
-            <div className="space-y-3">
-              <Label htmlFor="foodPreferences">🍽️ Food Preferences</Label>
-              <Textarea
-                id="foodPreferences"
-                value={formData.foodPreferences}
-                onChange={(e) => setFormData(prev => ({ ...prev, foodPreferences: e.target.value }))}
-                placeholder="e.g., vegetarian, halal, no spicy food, love street food, traditional Moroccan cuisine, dietary restrictions..."
-                rows={3}
-                className="w-full"
-              />
-              <p className="text-xs text-muted-foreground">Any dietary preferences, restrictions, or food interests</p>
-            </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="departureDate">Arrival Date</Label>
-                <div className="relative">
-                  <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="departureDate"
-                    type="date"
-                    value={formData.departureDate ? formData.departureDate.toISOString().split('T')[0] : ''}
-                    onChange={(e) => {
-                      const date = e.target.value ? new Date(e.target.value) : undefined;
-                      setFormData(prev => ({ ...prev, departureDate: date }));
-                    }}
-                    className="pl-10"
-                    min={new Date().toISOString().split('T')[0]}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="returnDate">Return Date</Label>
-                <div className="relative">
-                  <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="returnDate"
-                    type="date"
-                    value={formData.returnDate ? formData.returnDate.toISOString().split('T')[0] : ''}
-                    onChange={(e) => {
-                      const date = e.target.value ? new Date(e.target.value) : undefined;
-                      setFormData(prev => ({ ...prev, returnDate: date }));
-                    }}
-                    className="pl-10"
-                    min={formData.departureDate ? formData.departureDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="activities">�🇦 What interests you about Morocco?</Label>
-              <Textarea
-                id="activities"
-                value={formData.activityPreferences}
-                onChange={(e) => setFormData(prev => ({ ...prev, activityPreferences: e.target.value }))}
-                placeholder="e.g., watching World Cup matches, exploring Marrakesh medina, trying tagine and couscous, visiting Hassan II Mosque, Atlas Mountains day trip"
-                rows={3}
-              />
             </div>
           </CardContent>
         </Card>
 
-        {/* Travel Preferences Section */}
+        {/* Food & Restaurant Agents */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5" />
-              � Morocco Travel Preferences
+              <Utensils className="w-5 h-5" />
+              Food & Dining Preferences
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>💰 Budget Level</Label>
-              <Select value={formData.budget} onValueChange={(value) => setFormData(prev => ({ ...prev, budget: value }))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Budget">Budget (Hostels & Local Food)</SelectItem>
-                  <SelectItem value="Standard">Standard (3-4★ Hotels & Mixed Dining)</SelectItem>
-                  <SelectItem value="Luxury">Luxury (5★ Riads & Fine Dining)</SelectItem>
-                </SelectContent>
-              </Select>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Dietary Restrictions</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                {['Vegetarian', 'Vegan', 'Halal', 'Kosher', 'Gluten-Free', 'Dairy-Free', 'Nut Allergies', 'None'].map(diet => (
+                  <div key={diet} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`diet_${diet}`}
+                      checked={formData.dietary_restrictions.includes(diet)}
+                      onCheckedChange={(checked) => handleArrayChange('dietary_restrictions', diet, checked as boolean)}
+                    />
+                    <Label htmlFor={`diet_${diet}`} className="text-sm">{diet}</Label>
+                  </div>
+                ))}
+              </div>
             </div>
-
-            <div className="space-y-2">
-              <Label>✈️ Flight Class</Label>
-              <Select value={formData.flightClass} onValueChange={(value) => setFormData(prev => ({ ...prev, flightClass: value }))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Economy">Economy</SelectItem>
-                  <SelectItem value="Business">Business</SelectItem>
-                  <SelectItem value="First Class">First Class</SelectItem>
-                </SelectContent>
-              </Select>
+            <div>
+              <Label>Cuisine Preferences</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                {['Moroccan Traditional', 'Berber Cuisine', 'Mediterranean', 'French', 'International', 'Street Food', 'Fine Dining', 'Local Specialties'].map(cuisine => (
+                  <div key={cuisine} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`cuisine_${cuisine}`}
+                      checked={formData.cuisine_preferences.includes(cuisine)}
+                      onCheckedChange={(checked) => handleArrayChange('cuisine_preferences', cuisine, checked as boolean)}
+                    />
+                    <Label htmlFor={`cuisine_${cuisine}`} className="text-sm">{cuisine}</Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="spice_tolerance">Spice Tolerance</Label>
+                <Select value={formData.spice_tolerance} onValueChange={(value) => handleInputChange('spice_tolerance', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select spice level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="mild">Mild - No spice</SelectItem>
+                    <SelectItem value="medium">Medium - Some spice</SelectItem>
+                    <SelectItem value="hot">Hot - Love spicy food</SelectItem>
+                    <SelectItem value="very-hot">Very Hot - Bring the heat!</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="food_budget">Food Budget (per day)</Label>
+                <Select value={formData.food_budget} onValueChange={(value) => handleInputChange('food_budget', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select budget" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="budget">$20-40</SelectItem>
+                    <SelectItem value="mid-range">$40-80</SelectItem>
+                    <SelectItem value="luxury">$80-150</SelectItem>
+                    <SelectItem value="fine-dining">$150+</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="restaurant_type">Restaurant Type Preference</Label>
+                <Select value={formData.restaurant_type} onValueChange={(value) => handleInputChange('restaurant_type', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="traditional">Traditional Moroccan</SelectItem>
+                    <SelectItem value="modern">Modern Fusion</SelectItem>
+                    <SelectItem value="rooftop">Rooftop Dining</SelectItem>
+                    <SelectItem value="street-food">Street Food</SelectItem>
+                    <SelectItem value="fine-dining">Fine Dining</SelectItem>
+                    <SelectItem value="casual">Casual Dining</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Travel Essentials Section */}
+        {/* Activities Agent */}
         <Card>
           <CardHeader>
-            <CardTitle>🛂 Morocco Travel Essentials & World Cup Packing</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="w-5 h-5" />
+              Activities & Experiences
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-3">
-              <Label className="text-base font-medium">Morocco Travel Requirements</Label>
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="visa"
-                    checked={formData.visaRequired}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, visaRequired: !!checked }))}
-                  />
-                  <Label htmlFor="visa">🛃 Check Morocco Visa Requirements</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="insurance"
-                    checked={formData.travelInsurance}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, travelInsurance: !!checked }))}
-                  />
-                  <Label htmlFor="insurance">🛡️ Get Travel Insurance</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="currency"
-                    checked={formData.currencyConverter}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, currencyConverter: !!checked }))}
-                  />
-                  <Label htmlFor="currency">💱 Moroccan Dirham (MAD) Exchange Info</Label>
-                </div>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Activity Types of Interest</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                {['Historical Sites', 'Museums', 'Souks/Markets', 'Desert Tours', 'Mountain Hiking', 'Beach Activities', 'Cultural Shows', 'Cooking Classes', 'Adventure Sports', 'Photography Tours', 'Camel Riding', 'Hot Air Balloon'].map(activity => (
+                  <div key={activity} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`activity_${activity}`}
+                      checked={formData.activity_types.includes(activity)}
+                      onCheckedChange={(checked) => handleArrayChange('activity_types', activity, checked as boolean)}
+                    />
+                    <Label htmlFor={`activity_${activity}`} className="text-sm">{activity}</Label>
+                  </div>
+                ))}
               </div>
             </div>
-
-            <Separator />
-
-            <div className="space-y-3">
-              <Label className="text-base font-medium">⚽ World Cup Morocco Packing Checklist</Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {Object.entries(formData.packingItems).map(([item, checked]) => (
-                  <div key={item} className="flex items-center space-x-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="physical_level">Physical Activity Level</Label>
+                <Select value={formData.physical_level} onValueChange={(value) => handleInputChange('physical_level', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select activity level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low - Minimal walking</SelectItem>
+                    <SelectItem value="moderate">Moderate - Some walking/hiking</SelectItem>
+                    <SelectItem value="high">High - Lots of walking/hiking</SelectItem>
+                    <SelectItem value="extreme">Extreme - Adventure sports</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="duration_preference">Activity Duration Preference</Label>
+                <Select value={formData.duration_preference} onValueChange={(value) => handleInputChange('duration_preference', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select duration" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="short">Short (1-2 hours)</SelectItem>
+                    <SelectItem value="half-day">Half Day (3-4 hours)</SelectItem>
+                    <SelectItem value="full-day">Full Day (6-8 hours)</SelectItem>
+                    <SelectItem value="multi-day">Multi-day Tours</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>Cultural Interests</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                {['Architecture', 'Art & Crafts', 'Music & Dance', 'Religious Sites', 'Local Traditions', 'History', 'Literature', 'Language Learning'].map(interest => (
+                  <div key={interest} className="flex items-center space-x-2">
                     <Checkbox
-                      id={item}
-                      checked={checked}
-                      onCheckedChange={(isChecked) => 
-                        setFormData(prev => ({ 
-                          ...prev, 
-                          packingItems: { 
-                            ...prev.packingItems, 
-                            [item]: !!isChecked 
-                          } 
-                        }))
-                      }
+                      id={`cultural_${interest}`}
+                      checked={formData.cultural_interests.includes(interest)}
+                      onCheckedChange={(checked) => handleArrayChange('cultural_interests', interest, checked as boolean)}
                     />
-                    <Label htmlFor={item}>{item}</Label>
+                    <Label htmlFor={`cultural_${interest}`} className="text-sm">{interest}</Label>
                   </div>
                 ))}
               </div>
@@ -494,23 +640,181 @@ Focus on creating an authentic Moroccan World Cup experience that combines footb
           </CardContent>
         </Card>
 
-        {/* Summary Section */}
-        <Card className="bg-gradient-to-r from-primary/5 to-primary/10">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-4">
-              <h3 className="text-xl font-semibold">
-                🌟 Your {travelThemes.find(t => t.value === formData.travelTheme)?.label} to Morocco 2030 is about to begin! ⚽
-              </h3>
-              <p className="text-muted-foreground">
-                Get ready for the ultimate World Cup experience in the beautiful Kingdom of Morocco!
-              </p>
-              <Button type="submit" disabled={disabled} size="lg" className="w-full md:w-auto">
-                <Plane className="w-5 h-5 mr-2" />
-                🚀 Plan My Morocco World Cup Journey
-              </Button>
+        {/* Weather Agent */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CloudSun className="w-5 h-5" />
+              Weather Considerations
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Weather Concerns</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                {['Extreme Heat', 'Rain', 'Wind', 'Cold Nights', 'Humidity', 'Dust Storms', 'Seasonal Crowds'].map(concern => (
+                  <div key={concern} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`weather_${concern}`}
+                      checked={formData.weather_concerns.includes(concern)}
+                      onCheckedChange={(checked) => handleArrayChange('weather_concerns', concern, checked as boolean)}
+                    />
+                    <Label htmlFor={`weather_${concern}`} className="text-sm">{concern}</Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="seasonal_preferences">Seasonal Preferences</Label>
+                <Select value={formData.seasonal_preferences} onValueChange={(value) => handleInputChange('seasonal_preferences', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select season" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="spring">Spring (March-May)</SelectItem>
+                    <SelectItem value="summer">Summer (June-August)</SelectItem>
+                    <SelectItem value="autumn">Autumn (September-November)</SelectItem>
+                    <SelectItem value="winter">Winter (December-February)</SelectItem>
+                    <SelectItem value="flexible">Flexible</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center space-x-2 mt-6">
+                <Checkbox
+                  id="activities_weather_dependent"
+                  checked={formData.activities_weather_dependent}
+                  onCheckedChange={(checked) => handleInputChange('activities_weather_dependent', checked)}
+                />
+                <Label htmlFor="activities_weather_dependent">My planned activities are weather dependent</Label>
+              </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* Research Agent */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Search className="w-5 h-5" />
+              Research & Information Needs
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Research Topics</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                {['Local Customs', 'Language Basics', 'Currency & Tipping', 'Transportation', 'Safety Tips', 'Cultural Etiquette', 'Shopping Tips', 'Emergency Info'].map(topic => (
+                  <div key={topic} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`research_${topic}`}
+                      checked={formData.research_topics.includes(topic)}
+                      onCheckedChange={(checked) => handleArrayChange('research_topics', topic, checked as boolean)}
+                    />
+                    <Label htmlFor={`research_${topic}`} className="text-sm">{topic}</Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="information_depth">Information Depth Needed</Label>
+              <Select value={formData.information_depth} onValueChange={(value) => handleInputChange('information_depth', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select depth" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="basic">Basic Overview</SelectItem>
+                  <SelectItem value="detailed">Detailed Information</SelectItem>
+                  <SelectItem value="comprehensive">Comprehensive Guide</SelectItem>
+                  <SelectItem value="expert">Expert-level Details</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="specific_questions">Specific Questions or Topics</Label>
+              <Textarea
+                id="specific_questions"
+                placeholder="Any specific questions about Morocco, culture, travel tips, etc."
+                value={formData.specific_questions}
+                onChange={(e) => handleInputChange('specific_questions', e.target.value)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Travel Booking Agent */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="w-5 h-5" />
+              Booking & Travel Arrangements
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="package_type">Package Type Preference</Label>
+                <Select value={formData.package_type} onValueChange={(value) => handleInputChange('package_type', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select package type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="full-package">Full Package (Flight + Hotel + Activities)</SelectItem>
+                    <SelectItem value="partial">Partial Package (Select components)</SelectItem>
+                    <SelectItem value="individual">Individual Bookings</SelectItem>
+                    <SelectItem value="guided-tour">Guided Tour Package</SelectItem>
+                    <SelectItem value="self-guided">Self-Guided Package</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="booking_timeline">Booking Timeline</Label>
+                <Select value={formData.booking_timeline} onValueChange={(value) => handleInputChange('booking_timeline', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select timeline" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="asap">As soon as possible</SelectItem>
+                    <SelectItem value="1-week">Within 1 week</SelectItem>
+                    <SelectItem value="1-month">Within 1 month</SelectItem>
+                    <SelectItem value="3-months">Within 3 months</SelectItem>
+                    <SelectItem value="planning">Just planning for now</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>Contact Preferences</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                {['Email', 'Phone', 'WhatsApp', 'Text Message'].map(contact => (
+                  <div key={contact} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`contact_${contact}`}
+                      checked={formData.contact_preferences.includes(contact)}
+                      onCheckedChange={(checked) => handleArrayChange('contact_preferences', contact, checked as boolean)}
+                    />
+                    <Label htmlFor={`contact_${contact}`} className="text-sm">{contact}</Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="special_requirements">Special Requirements or Requests</Label>
+              <Textarea
+                id="special_requirements"
+                placeholder="Any special requirements, accessibility needs, celebration occasions, etc."
+                value={formData.special_requirements}
+                onChange={(e) => handleInputChange('special_requirements', e.target.value)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-center pt-6">
+          <Button type="submit" size="lg" className="px-8" disabled={disabled}>
+            Create My Morocco Travel Plan
+          </Button>
+        </div>
       </form>
     </div>
   );

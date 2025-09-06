@@ -1,13 +1,56 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plane, MapPin, Calendar, DollarSign, Sparkles } from 'lucide-react';
+import { Plane, MapPin, Calendar, DollarSign, Sparkles, Utensils, Hotel, Cloud, Search, MapIcon } from 'lucide-react';
 
 interface TravelWelcomeProps {
   onStartPlanning: () => void;
 }
 
 export const TravelWelcome: React.FC<TravelWelcomeProps> = ({ onStartPlanning }) => {
+  const aiAgents = [
+    {
+      icon: Plane,
+      title: "Flight Agent",
+      description: "Find the best flights with prices, schedules, and CO2 emissions"
+    },
+    {
+      icon: Hotel,
+      title: "Hotel Agent", 
+      description: "Discover top-rated accommodations with ratings and booking links"
+    },
+    {
+      icon: Utensils,
+      title: "Food Recommender",
+      description: "Get personalized meal suggestions based on your taste preferences"
+    },
+    {
+      icon: Utensils,
+      title: "Restaurant Agent",
+      description: "Find the best restaurants and local dining experiences"
+    },
+    {
+      icon: MapIcon,
+      title: "Activities Agent",
+      description: "Discover cultural attractions and memorable experiences"
+    },
+    {
+      icon: Cloud,
+      title: "Weather Agent",
+      description: "Get weather forecasts and climate information for your trip"
+    },
+    {
+      icon: Search,
+      title: "Research Agent",
+      description: "Access comprehensive information about Morocco's World Cup venues"
+    },
+    {
+      icon: DollarSign,
+      title: "Travel Booking Agent",
+      description: "Find the best accommodation deals within your budget"
+    }
+  ];
+
   const features = [
     {
       icon: Plane,
@@ -93,6 +136,34 @@ export const TravelWelcome: React.FC<TravelWelcomeProps> = ({ onStartPlanning })
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* AI Agents Section */}
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold text-center">🤖 Our Specialized AI Agents</h2>
+        <p className="text-center text-muted-foreground max-w-2xl mx-auto">
+          Our intelligent agents work together to provide you with personalized recommendations for every aspect of your Morocco trip.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {aiAgents.map((agent, index) => (
+            <Card key={index} className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/20">
+              <CardContent className="p-4 text-center space-y-3">
+                <div className="flex justify-center">
+                  <div className="p-2 bg-gradient-to-r from-primary/10 to-primary/5 rounded-full group-hover:from-primary/20 group-hover:to-primary/10 transition-colors">
+                    <agent.icon className="w-6 h-6 text-primary" />
+                  </div>
+                </div>
+                <h3 className="font-semibold text-sm">{agent.title}</h3>
+                <p className="text-muted-foreground text-xs leading-relaxed">{agent.description}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="text-center">
+          <p className="text-sm text-muted-foreground">
+            💡 Simply ask questions or use our form - our agents will automatically handle your requests!
+          </p>
+        </div>
       </div>
 
       {/* Host Cities & Stadiums */}

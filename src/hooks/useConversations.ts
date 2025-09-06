@@ -106,11 +106,11 @@ export const useConversations = () => {
   };
 
   const updateCurrentConversation = (messages: Conversation['messages']) => {
-    if (!state.currentConversationId) return;
-
     setState(prev => {
+      if (!prev.currentConversationId) return prev;
+
       const updatedConversations = prev.conversations.map(conv => {
-        if (conv.id === state.currentConversationId) {
+        if (conv.id === prev.currentConversationId) {
           const updatedConv = {
             ...conv,
             messages,
@@ -127,7 +127,7 @@ export const useConversations = () => {
         return conv;
       });
 
-      const currentConversation = updatedConversations.find(c => c.id === state.currentConversationId) || null;
+      const currentConversation = updatedConversations.find(c => c.id === prev.currentConversationId) || null;
 
       return {
         ...prev,
